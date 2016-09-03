@@ -5,6 +5,9 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 from apis.models import NewsItems
 from apis.serializers import NewsSerializer
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 class JsonResponse(HttpResponse):
 	def __init__(self,data,**kwargs):
@@ -39,3 +42,23 @@ def add_news(request):
 			return JsonResponse(serialized_news.data, status=201)
 
 		return JsonResponse(serialized_news.errors, status=400)
+
+# function based viewscd
+@api_view(['POST'])
+def get_news2(request):
+	if request.method == 'POST':
+		data = request.data
+		if 'language' not in data:
+			lang = 'eng'
+		else:
+			lang = data.get('language')
+		if 'count' not in data:
+			limit = 10
+		else:
+			limit = data.get('count')
+		news = NewsItems.objects.filter(language=lang)[:limit]
+		serialized_news = NewsSerializer(news,many=True)
+
+		return Response(serialized_news.data,status=status.HTTP_200_OK)
+	return Response(status=status.HTTP_404_NOT_FOUND)
+
